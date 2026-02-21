@@ -165,15 +165,16 @@ void FirstApp::run() {
     // tank + turret + missile
     if (gameObjects.find(tankId) != gameObjects.end() &&
         gameObjects.find(turretId) != gameObjects.end() &&
-        gameObjects.find(missileId) != gameObjects.end()) {
+        gameObjects.find(missileId) != gameObjects.end() ) {  
       auto &tankBody = gameObjects.at(tankId);
       auto &tankTurret = gameObjects.at(turretId);
       auto &missile = gameObjects.at(missileId);
+      
       if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
-          tankController.moveTankGamepad(frameTime, tankBody, tankTurret, missile);
+          tankController.moveTankGamepad(frameTime, tankBody, tankTurret, missile); 
       }
       else {
-          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile);
+          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile, gameObjects);
       }
 
     }
@@ -216,6 +217,20 @@ void FirstApp::loadGameObjects() {
   tankId = tankBody.getId();
   gameObjects.emplace(tankId, std::move(tankBody));
 
+  //  Resimdeki o spesifik binanýn önüne veya içine GÖRÜNMEZ BÝR DUVAR koyalým.
+  auto invisibleWall = LveGameObject::createGameObject();
+  // Bu koordinatlarý binanýn bulunduðu konuma göre deneme yanýlma ile oturtmalýsýn
+  invisibleWall.transform.translation = { 0.0f, 1.0f, 15.0f };
+  invisibleWall.transform.scale = { 1.f, 1.f, 1.f };
+  invisibleWall.collider = std::make_unique<ColliderComponent>();
+
+  // Kutunun boyutlarý (Örneðin: X ekseninde 10 birim, Z ekseninde 5 birim kalýnlýðýnda bir duvar)
+  invisibleWall.collider->minOffset = { -10.0f, -5.0f, -2.5f };
+  invisibleWall.collider->maxOffset = { 10.0f, 5.0f, 2.5f };
+
+  gameObjects.emplace(invisibleWall.getId(), std::move(invisibleWall));
+
+
   // Turret
   lveModel = LveModel::createModelFromFile(lveDevice, "models/TankTurret+Barrel.obj");
   auto tankTurret = LveGameObject::createGameObject();
@@ -242,6 +257,11 @@ void FirstApp::loadGameObjects() {
   town.transform.scale = { 0.5f, -0.5f, 0.5f };
   townId = town.getId();
   gameObjects.emplace(townId, std::move(town));
+
+  // Town kodlarýnýn altýna (Þehri þimdilik büyük tek bir kutu olarak düþünüyoruz):
+  town.collider = std::make_unique<ColliderComponent>();
+  town.collider->minOffset = { -40.0f, -1.0f, -40.0f };
+  town.collider->maxOffset = { 40.0f, 15.0f, 40.0f };
 
   //Ground
   lveModel = LveModel::createModelFromFile(lveDevice, "models/Ground.obj");

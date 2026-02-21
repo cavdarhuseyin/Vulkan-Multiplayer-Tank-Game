@@ -1,4 +1,5 @@
 #include "keyboard_movement_controller.hpp"
+#include "lve_collision.hpp"
 #include <limits>
 #include <glm/gtc/constants.hpp>
 
@@ -165,7 +166,8 @@ namespace lve {
     void KeyboardMovementController::moveTank(GLFWwindow* window, float dt,
         LveGameObject& tankBody,
         LveGameObject& tankTurret,
-        LveGameObject& missile) {
+        LveGameObject& missile,
+        LveGameObject::Map& gameObjects) { //ekledim
         // -------- Body rotate --------
         glm::vec3 rotate{ 0 };
         if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
@@ -185,7 +187,40 @@ namespace lve {
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= bodyForward;
 
         if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
-            tankBody.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
+
+            // 1. Önce hedeflenen yeni pozisyonu hesapla
+            glm::vec3 proposedPosition = tankBody.transform.translation + moveSpeed * dt * glm::normalize(moveDir);
+
+            // 2. Çarpýþma testi yap
+            bool hasCollision = false;
+            if (tankBody.collider != nullptr) {
+                // Sahnedeki tüm objeleri kontrol et
+                for (auto& kv : gameObjects) {
+                    auto& obj = kv.second;
+
+                    // Kendisiyle, taretiyle veya mermisiyle çarpýþmayý yoksay
+                    if (obj.getId() == tankBody.getId() ||
+                        obj.getId() == tankTurret.getId() ||
+                        obj.getId() == missile.getId()) {
+                        continue;
+                    }
+
+                    // Eðer objenin collider'ý varsa test et
+                    if (obj.collider != nullptr) {
+                        if (LveCollision::checkAABBCollision(
+                            proposedPosition, *tankBody.collider, tankBody.transform.scale,
+                            obj.transform.translation, *obj.collider, obj.transform.scale)) {
+                            hasCollision = true;
+                            break; // Çarpýþma bulduk, daha fazla aramaya gerek yok
+                        }
+                    }
+                }
+            }
+
+            // 3. Çarpýþma yoksa hareketi uygula!
+            if (!hasCollision) {
+                tankBody.transform.translation = proposedPosition;
+            }
         }
 
         // -------- Turret rotation (relative) --------

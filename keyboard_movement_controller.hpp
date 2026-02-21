@@ -46,8 +46,11 @@ public:
   void moveInPlaneXZ(GLFWwindow *window, float dt, LveGameObject &gameObject);
 
   // Tank + turret + missile control
-  void moveTank(GLFWwindow *window, float dt, LveGameObject &tankBody, LveGameObject &tankTurret,
-                LveGameObject &missile);
+ /* void moveTank(GLFWwindow* window, float dt, LveGameObject& tankBody, LveGameObject& tankTurret,
+                LveGameObject &missile);*/
+               
+                // Sadece town yerine tüm gameObjects haritasýný (map) referans olarak alýyoruz
+  void moveTank(GLFWwindow* window, float dt, LveGameObject& tankBody, LveGameObject& tankTurret, LveGameObject& missile, LveGameObject::Map& gameObjects);
 
   // Tank key bindings setup
   void setupForTank();

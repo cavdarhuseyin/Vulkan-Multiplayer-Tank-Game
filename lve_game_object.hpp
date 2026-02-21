@@ -26,6 +26,11 @@ namespace lve {
 		glm::mat3 normalMatrix();
 	};
 
+	struct ColliderComponent {
+		glm::vec3 minOffset{}; // Modelin merkezinden en eksi x,y,z noktasý
+		glm::vec3 maxOffset{}; // Modelin merkezinden en artý x,y,z noktasý
+	};
+
 	struct PointLightComponent {
 
 		float lightIntensity = 1.0f;
@@ -36,6 +41,8 @@ namespace lve {
 	  public:
 		  using id_t = unsigned int;
 		  using Map = std::unordered_map<id_t, LveGameObject>;
+
+		  std::unique_ptr<ColliderComponent> collider = nullptr; //collider
 
 		  static LveGameObject createGameObject() {
 
