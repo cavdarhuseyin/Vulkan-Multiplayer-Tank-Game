@@ -2,6 +2,8 @@
 #include <limits>
 #include <glm/gtc/constants.hpp>
 
+#include "lve_collision.hpp" 
+
 #include <windows.h>
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
@@ -165,7 +167,8 @@ namespace lve {
     void KeyboardMovementController::moveTank(GLFWwindow* window, float dt,
         LveGameObject& tankBody,
         LveGameObject& tankTurret,
-        LveGameObject& missile) {
+        LveGameObject& missile,
+        LveGameObject::Map& gameObjects) {
         // -------- Body rotate --------
         glm::vec3 rotate{ 0 };
         if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
