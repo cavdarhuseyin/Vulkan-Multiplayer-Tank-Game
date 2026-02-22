@@ -185,7 +185,42 @@ namespace lve {
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= bodyForward;
 
         if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
-            tankBody.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
+
+            glm::vec3 rayDir = glm::normalize(moveDir);
+
+            // Tankýn çarpýþma yapacaðý modelin þehri (townId) olduðunu varsayýyoruz.
+            // GameObjects map'i içinden þehri çekelim (önceden parametre olarak eklemiþtik).
+            // NOT: town nesnesini referans alýyoruz
+            LveGameObject* town = nullptr;
+            for (auto& kv : gameObjects) {
+                if (kv.second.model != nullptr && kv.second.getId() != tankBody.getId() && kv.second.getId() != tankTurret.getId()) {
+                    // Sahnede model içeren büyük objeyi þehir kabul et (istersen isme veya ID'ye göre filtrele)
+                    town = &kv.second;
+                    break;
+                }
+            }
+                
+            bool canMove = true;
+
+            // Eðer þehir bulunduysa ýþýn testi (Raycast) yap
+            if (town != nullptr && town->model != nullptr) {
+                float hitDistance = LveCollision::IntersectModel(
+                    tankBody.transform.translation,
+                    rayDir,
+                    *town->model,
+                    town->transform.mat4()
+                );
+
+                // Eðer ýþýn bir üçgene çarptýysa ve mesafe (örneðin) 2.5 birimden yakýnsa hareketi DURDUR!
+                if (hitDistance < 2.5f) {
+                    canMove = false;
+                }
+            }
+
+            // Engel yoksa ilerle
+            if (canMove) {
+                tankBody.transform.translation += moveSpeed * dt * rayDir;
+            }
         }
 
         // -------- Turret rotation (relative) --------

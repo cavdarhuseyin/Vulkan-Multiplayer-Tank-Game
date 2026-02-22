@@ -41,6 +41,11 @@ namespace lve {
     }
 
     LveModel::LveModel(LveDevice& device, const Builder& builder) : lveDevice{ device } {
+
+        // GPU'ya göndermeden önce RAM kopyasýný saklýyoruz
+        vertices_cpu = builder.vertices;
+        indices_cpu = builder.indices;
+
         createVertexBuffers(builder.vertices);
         createIndexBuffers(builder.indices);
         submeshes_ = builder.submeshes;

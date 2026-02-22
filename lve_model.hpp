@@ -33,6 +33,11 @@ public:
     }
   };
 
+    // Getter fonksiyonlarýmýz (çarpýþma testi için dýþarýdan eriþeceðiz)
+    const std::vector<Vertex>& getVertices() const { return vertices_cpu; }
+    const std::vector<uint32_t>& getIndices() const { return indices_cpu; }
+    bool hasIndices() const { return hasIndexBuffer; }
+
   // One draw call region in the shared index buffer
   struct Submesh {
     uint32_t firstIndex{0};
@@ -74,9 +79,15 @@ public:
   void draw(VkCommandBuffer commandBuffer);
   void drawSubmesh(VkCommandBuffer commandBuffer, const Submesh &submesh);
 
+
+
 private:
   void createVertexBuffers(const std::vector<Vertex> &vertices);
   void createIndexBuffers(const std::vector<uint32_t> &indices);
+
+  // Model verilerini CPU'da tutacak deðiþkenlerimiz
+  std::vector<Vertex> vertices_cpu;
+  std::vector<uint32_t> indices_cpu;
 
   LveDevice &lveDevice;
 
@@ -89,6 +100,9 @@ private:
 
   std::vector<Submesh> submeshes_{};
   std::vector<Material> materials_{};
+
+
+
 };
 
 } // namespace lve
