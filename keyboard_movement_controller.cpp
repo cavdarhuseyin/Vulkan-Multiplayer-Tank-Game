@@ -313,7 +313,7 @@ namespace lve {
             }
             else {
                 // Önü boþsa uçmaya devam et
-                missile.transform.translation += missileVelocity * dt;
+                missile.transform.translation -= missileVelocity * dt;
             }
         
         }
