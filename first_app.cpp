@@ -170,10 +170,10 @@ void FirstApp::run() {
       auto &tankTurret = gameObjects.at(turretId);
       auto &missile = gameObjects.at(missileId);
       if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
-          tankController.moveTankGamepad(frameTime, tankBody, tankTurret, missile);
+          tankController.moveTankGamepad(frameTime, tankBody, tankTurret, missile); //gameObjects yok farkýndayým
       }
       else {
-          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile);
+          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile, gameObjects);
       }
 
     }
