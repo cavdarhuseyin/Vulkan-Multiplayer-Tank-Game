@@ -202,7 +202,8 @@ namespace lve {
                 auto& obj = kv.second;
 
                 // Kendimizi, tareti ve kendi mermimizi GÖRMEZDEN GEL!
-                if (obj.model == nullptr ||
+                if (!obj.isActive ||
+                    obj.model == nullptr ||
                     obj.getId() == tankBody.getId() ||
                     obj.getId() == tankTurret.getId() ||
                     obj.getId() == missile.getId()) {
@@ -251,6 +252,8 @@ namespace lve {
         if (reloadDown && !reloadWasDown) {
             isMissileFired = false;
             missileVelocity = glm::vec3(0.f);
+
+            missile.isActive = true; // Mermiyi tekrar aktif ve görünür yap
         }
         reloadWasDown = reloadDown;
 
@@ -295,8 +298,13 @@ namespace lve {
             // Merminin önündeki engelleri tara
             for (auto& kv : gameObjects) {
                 auto& obj = kv.second;
-                if (obj.model == nullptr || obj.getId() == tankBody.getId() ||
-                    obj.getId() == tankTurret.getId() || obj.getId() == missile.getId()) {
+
+                // KAPALI OBJELERÝ, Kendimizi vb. GÖRMEZDEN GEL!
+                if (!obj.isActive ||
+                    obj.model == nullptr || 
+                    obj.getId() == tankBody.getId() ||
+                    obj.getId() == tankTurret.getId() || 
+                    obj.getId() == missile.getId()) {
                     continue;
                 }
 
@@ -311,9 +319,9 @@ namespace lve {
 
             // Mermi bir engele 0.5 birimden daha fazla yaklaþýrsa PATLASIN / DURSUN
             if (missileClosestHit < 0.5f) {
-                isMissileFired = false;
                 missileVelocity = glm::vec3(0.f);
-                // Ýstersen ileride buraya bir patlama (explosion) partikülü veya sesi ekleyebilirsin
+                
+                missile.isActive = false; // Mermiyi sahnede kapat
             }
             else {
                 // Önü boþsa uçmaya devam et
