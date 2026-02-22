@@ -184,6 +184,10 @@ namespace lve {
         float bodyYaw = tankBody.transform.rotation.y;
         const glm::vec3 bodyForward{ sin(bodyYaw), 0.f, cos(bodyYaw) };
 
+        // TANKIN MERKEZÝNDEN (yukarýdan) IÞIN AT (Ayak ucundan deðil!)
+        glm::vec3 rayOrigin = tankBody.transform.translation;
+        rayOrigin.y -= 1.0f; // Vulkan'da -Y yukarýyý temsil eder. Iþýný yukarý kaldýrdýk.
+
         glm::vec3 moveDir{ 0.f };
         if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) moveDir += bodyForward;
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= bodyForward;
@@ -207,7 +211,7 @@ namespace lve {
 
                 // Kalan objelere (Þehir, Zemin vb.) ýþýn at
                 float hitDistance = LveCollision::IntersectModel(
-                    tankBody.transform.translation,
+                    rayOrigin,
                     rayDir,
                     *obj.model,
                     obj.transform.mat4()
