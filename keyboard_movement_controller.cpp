@@ -4,7 +4,8 @@
 
 #include "lve_collision.hpp" 
 
-#include <windows.h>
+#define NOMINMAX         // Windows'un max/min makrolarýný iptal et
+#include <windows.h>     // Sonra windows.h'yi dahil et
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -188,40 +189,38 @@ namespace lve {
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= bodyForward;
 
         if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
-
             glm::vec3 rayDir = glm::normalize(moveDir);
 
-            // Tankýn çarpýþma yapacaðý modelin þehri (townId) olduðunu varsayýyoruz.
-            // GameObjects map'i içinden þehri çekelim (önceden parametre olarak eklemiþtik).
-            // NOT: town nesnesini referans alýyoruz
-            LveGameObject* town = nullptr;
-            for (auto& kv : gameObjects) {
-                if (kv.second.model != nullptr && kv.second.getId() != tankBody.getId() && kv.second.getId() != tankTurret.getId()) {
-                    // Sahnede model içeren büyük objeyi þehir kabul et (istersen isme veya ID'ye göre filtrele)
-                    town = &kv.second;
-                    break;
-                }
-            }
-                
-            bool canMove = true;
+            float closestHit = std::numeric_limits<float>::max();
 
-            // Eðer þehir bulunduysa ýþýn testi (Raycast) yap
-            if (town != nullptr && town->model != nullptr) {
+            // Sahnede çarpýþýlabilecek her þeyi tara
+            for (auto& kv : gameObjects) {
+                auto& obj = kv.second;
+
+                // Kendimizi, tareti ve kendi mermimizi GÖRMEZDEN GEL!
+                if (obj.model == nullptr ||
+                    obj.getId() == tankBody.getId() ||
+                    obj.getId() == tankTurret.getId() ||
+                    obj.getId() == missile.getId()) {
+                    continue;
+                }
+
+                // Kalan objelere (Þehir, Zemin vb.) ýþýn at
                 float hitDistance = LveCollision::IntersectModel(
                     tankBody.transform.translation,
                     rayDir,
-                    *town->model,
-                    town->transform.mat4()
+                    *obj.model,
+                    obj.transform.mat4()
                 );
 
-                // Eðer ýþýn bir üçgene çarptýysa ve mesafe (örneðin) 2.5 birimden yakýnsa hareketi DURDUR!
-                if (hitDistance < 2.5f) {
-                    canMove = false;
+                // En yakýn engeli kaydet
+                if (hitDistance < closestHit) {
+                    closestHit = hitDistance;
                 }
             }
 
-            // Engel yoksa ilerle
-            if (canMove) {
+            // Eðer en yakýn engele (binaya) 2.5 birimden daha uzaksak ilerle
+            if (closestHit >= 2.5f) {
                 tankBody.transform.translation += moveSpeed * dt * rayDir;
             }
         }
@@ -285,8 +284,38 @@ namespace lve {
             missile.transform.rotation = tankTurret.transform.rotation;
         }
         else {
-            // Ateþlendiyse ileri uçsun (DOÐRU YÖN)
-            missile.transform.translation -= missileVelocity * dt;
+            // MERMÝ HAREKETÝ VE ÇARPIÞMASI
+            glm::vec3 missileRayDir = glm::normalize(missileVelocity);
+            float missileClosestHit = std::numeric_limits<float>::max();
+
+            // Merminin önündeki engelleri tara
+            for (auto& kv : gameObjects) {
+                auto& obj = kv.second;
+                if (obj.model == nullptr || obj.getId() == tankBody.getId() ||
+                    obj.getId() == tankTurret.getId() || obj.getId() == missile.getId()) {
+                    continue;
+                }
+
+                float hitDistance = LveCollision::IntersectModel(
+                    missile.transform.translation, missileRayDir, *obj.model, obj.transform.mat4()
+                );
+
+                if (hitDistance < missileClosestHit) {
+                    missileClosestHit = hitDistance;
+                }
+            }
+
+            // Mermi bir engele 0.5 birimden daha fazla yaklaþýrsa PATLASIN / DURSUN
+            if (missileClosestHit < 0.5f) {
+                isMissileFired = false;
+                missileVelocity = glm::vec3(0.f);
+                // Ýstersen ileride buraya bir patlama (explosion) partikülü veya sesi ekleyebilirsin
+            }
+            else {
+                // Önü boþsa uçmaya devam et
+                missile.transform.translation += missileVelocity * dt;
+            }
+        
         }
     }
 
