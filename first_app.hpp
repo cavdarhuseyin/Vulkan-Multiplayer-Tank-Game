@@ -40,6 +40,7 @@ private:
   LveGameObject::id_t missileId{};
   LveGameObject::id_t townId{};
   LveGameObject::id_t groundId{};
+  LveGameObject::id_t sightId{};
 };
 
 } // namespace lve

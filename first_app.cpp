@@ -116,12 +116,15 @@ void FirstApp::run() {
 
 
 
+
   // Assign object texture sets
   if (gameObjects.find(tankId) != gameObjects.end()) gameObjects.at(tankId).textureDescriptorSet = tankTextureSet;
   if (gameObjects.find(turretId) != gameObjects.end()) gameObjects.at(turretId).textureDescriptorSet = tankTextureSet;
   if (gameObjects.find(missileId) != gameObjects.end()) gameObjects.at(missileId).textureDescriptorSet = missileTextureSet;
   if (gameObjects.find(townId) != gameObjects.end()) gameObjects.at(townId).textureDescriptorSet = cityTextureSet;
   if (gameObjects.find(groundId) != gameObjects.end()) gameObjects.at(groundId).textureDescriptorSet = groundTextureSet;
+
+
 
   // Town material sets (if supported in your LveModel)
   //if (gameObjects.find(townId) != gameObjects.end() && gameObjects.at(townId).model != nullptr) {
@@ -165,15 +168,19 @@ void FirstApp::run() {
     // tank + turret + missile
     if (gameObjects.find(tankId) != gameObjects.end() &&
         gameObjects.find(turretId) != gameObjects.end() &&
-        gameObjects.find(missileId) != gameObjects.end()) {
+        gameObjects.find(missileId) != gameObjects.end() &&
+        gameObjects.find(sightId) != gameObjects.end()) {
+
       auto &tankBody = gameObjects.at(tankId);
       auto &tankTurret = gameObjects.at(turretId);
       auto &missile = gameObjects.at(missileId);
+      auto& sight = gameObjects.at(sightId);
+
       if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
           tankController.moveTankGamepad(frameTime, tankBody, tankTurret, missile); //gameObjects yok farkýndayým
       }
       else {
-          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile, gameObjects);
+          tankController.moveTank(lveWindow.getGLFWwindow(), frameTime, tankBody, tankTurret, missile, sight, gameObjects);
       }
 
     }
@@ -251,6 +258,14 @@ void FirstApp::loadGameObjects() {
   ground.transform.scale = { 0.5f, -0.5f, 0.5f };
   groundId = ground.getId();
   gameObjects.emplace(groundId, std::move(ground));
+
+  // Sight (Niþangah Lazer Noktasý)
+  lveModel = LveModel::createModelFromFile(lveDevice, "models/RedDot.obj"); 
+  auto sight = LveGameObject::createGameObject();
+  sight.model = lveModel;
+  sight.transform.scale = { 5.f, 5.f, 5.f }; 
+  sightId = sight.getId();
+  gameObjects.emplace(sightId, std::move(sight));
 
 
 }

@@ -169,6 +169,7 @@ namespace lve {
         LveGameObject& tankBody,
         LveGameObject& tankTurret,
         LveGameObject& missile,
+        LveGameObject& sight,
         LveGameObject::Map& gameObjects) {
         // -------- Body rotate --------
         glm::vec3 rotate{ 0 };
@@ -270,6 +271,47 @@ namespace lve {
             tankBody.transform.translation
             + muzzleOffsetLocal
             + dir * barrelLength;
+
+        // -------- SIGHT (Niþangah Lazer Noktasý) LOKASYON HESABI --------
+        float sightClosestHit = std::numeric_limits<float>::max();
+
+        for (auto& kv : gameObjects) {
+            auto& obj = kv.second;
+
+            // Niþangahýn kendisini, tanký, mermiyi ve kapalý objeleri es geç
+            if (!obj.isActive || obj.model == nullptr ||
+                obj.getId() == tankBody.getId() ||
+                obj.getId() == tankTurret.getId() ||
+                obj.getId() == missile.getId() ||
+                obj.getId() == sight.getId()) {
+                continue;
+            }
+
+            // Namlu ucundan namlunun baktýðý yöne (dir) ýþýn at
+            float hitDistance = LveCollision::IntersectModel(
+                muzzlePos, dir, *obj.model, obj.transform.mat4()
+            );
+
+            if (hitDistance < sightClosestHit) {
+                sightClosestHit = hitDistance;
+            }
+        }
+
+        // Eðer ýþýn bir þeye çarptýysa, niþangahý o çarpýþma noktasýna yerleþtir
+        if (sightClosestHit < 1000.f) {
+            // Çarpýþma noktasý = Baþlangýç + (Yön * Mesafe)
+            sight.transform.translation = muzzlePos + (dir * sightClosestHit);
+
+            // Eðer istersen nokta binalarýn tam içinde kalmasýn diye çok azýcýk kameraya doðru çekebilirsin:
+             sight.transform.translation -= dir * 0.05f;
+        }
+        else {
+            // Eðer ýþýn hiçbir þeye çarpmadýysa (örneðin gökyüzüne bakýyorsan)
+            // Niþangahý havada, namlunun çok ilerisinde sabit bir yerde tut
+            sight.transform.translation = muzzlePos + (dir * 200.f);
+        }
+
+
 
         // Edge trigger: fire
         if (fireDown && !fireWasDown && !isMissileFired) {

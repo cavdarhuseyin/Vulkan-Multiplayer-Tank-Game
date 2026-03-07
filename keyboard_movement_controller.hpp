@@ -47,7 +47,7 @@ public:
 
   // Tank + turret + missile control
   void moveTank(GLFWwindow *window, float dt, LveGameObject &tankBody, LveGameObject &tankTurret,
-                LveGameObject &missile, LveGameObject::Map& gameObjects);
+                LveGameObject &missile, LveGameObject& sight,  LveGameObject::Map& gameObjects);
 
   // Tank key bindings setup
   void setupForTank();
