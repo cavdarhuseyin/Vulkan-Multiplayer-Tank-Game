@@ -184,7 +184,7 @@ namespace lve {
         float bodyYaw = tankBody.transform.rotation.y;
         const glm::vec3 bodyForward{ sin(bodyYaw), 0.f, cos(bodyYaw) };
 
-        // TANKIN MERKEZÝNDEN (yukarýdan) IÞIN AT (Ayak ucundan deðil!)
+        // TANKIN MERKEZÝNDEN IÞIN AT (Ayak ucundan deðil!)
         glm::vec3 rayOrigin = tankBody.transform.translation;
         rayOrigin.y -= 1.0f; // Vulkan'da -Y yukarýyý temsil eder. Iþýný yukarý kaldýrdýk.
 
