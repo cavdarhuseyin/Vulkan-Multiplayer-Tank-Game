@@ -37,7 +37,7 @@ namespace lve {
 		  using id_t = unsigned int;
 		  using Map = std::unordered_map<id_t, LveGameObject>;
 
-		  bool isActive = true; //Obje varsayýlan olarak aktif (görünür) doðar
+		  bool isActive = true; //Obje varsayýlan olarak aktif (görünür)
 
 		  static LveGameObject createGameObject() {
 
