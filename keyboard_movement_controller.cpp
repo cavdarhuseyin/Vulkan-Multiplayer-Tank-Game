@@ -224,7 +224,7 @@ namespace lve {
                 }
             }
 
-            // Eðer en yakýn engele (binaya) 2.5 birimden daha uzaksak ilerle
+            // Eðer en yakýn engele 2.5 birimden daha uzaksak ilerle
             if (closestHit >= 2.5f) {
                 tankBody.transform.translation += moveSpeed * dt * rayDir;
             }
