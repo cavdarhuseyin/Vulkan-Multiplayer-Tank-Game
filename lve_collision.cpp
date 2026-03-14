@@ -3,7 +3,7 @@
 
 namespace lve {
 
-    // GLM ile optimize edilmiþ Iþýn-Üçgen kesiþim algoritmasý
+    // Iþýn-Üçgen kesiþim algoritmasý
     bool LveCollision::rayTriangleIntersect(
         const glm::vec3& orig, const glm::vec3& dir,
         const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
@@ -30,7 +30,7 @@ namespace lve {
         return t > EPSILON; // Çarpýþma kameranýn/tankýn arkasýnda kalmamalý
     }
 
-    // Modelin içindeki TÜM üçgenleri tarayan DX12'deki fonksiyonun birebir iþlevi
+    // Modelin içindeki TÜM üçgenleri tarayan fonksiyon
     float LveCollision::IntersectModel(
         const glm::vec3& rayOrigin, const glm::vec3& rayDir,
         const LveModel& model, const glm::mat4& modelMatrix) {
@@ -41,7 +41,7 @@ namespace lve {
 
         if (model.hasIndices()) {
             for (size_t i = 0; i < indices.size(); i += 3) {
-                // Dünya koordinatlarýna çevir (DX12'deki XMVector3Transform karþýlýðý)
+                // Dünya koordinatlarýna çevir (DX12'deki XMVector3Transform)
                 glm::vec3 v0 = modelMatrix * glm::vec4(vertices[indices[i]].position, 1.0f);
                 glm::vec3 v1 = modelMatrix * glm::vec4(vertices[indices[i + 1]].position, 1.0f);
                 glm::vec3 v2 = modelMatrix * glm::vec4(vertices[indices[i + 2]].position, 1.0f);
