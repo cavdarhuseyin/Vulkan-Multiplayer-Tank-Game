@@ -66,7 +66,7 @@ namespace lve {
         input.reload = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS ? 1 : 0;
         input.respawn = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS ? 1 : 0;
 
-        GLFWgamepadstate gamepad{};
+		GLFWgamepadstate gamepad{}; //gamepad kontrolleri için struct
 
         if (glfwJoystickIsGamepad(GLFW_JOYSTICK_1) &&
             glfwGetGamepadState(GLFW_JOYSTICK_1, &gamepad)) {
