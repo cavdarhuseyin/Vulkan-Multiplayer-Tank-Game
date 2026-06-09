@@ -57,13 +57,13 @@
     <ClCompile Include="lve_descriptors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="point_light_system.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lve_texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lve_collision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="client\network_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -113,13 +113,16 @@
     <ClInclude Include="lve_descriptors.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="point_light_system.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lve_texture.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lve_collision.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="client\network_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\network_protocol.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -129,7 +132,5 @@
     <None Include="compile.sh" />
     <None Include="Shaders\simple_shader.frag.spv" />
     <None Include="Shaders\simple_shader.vert.spv" />
-    <None Include="Shaders\point_light.vert" />
-    <None Include="Shaders\point_light.frag" />
   </ItemGroup>
 </Project>

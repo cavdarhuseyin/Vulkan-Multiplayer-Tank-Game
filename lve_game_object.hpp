@@ -19,8 +19,8 @@ namespace lve {
 		glm::vec3 scale{ 1.f, 1.f , 1.f }; // ölçeklendirme vektörü, baþlangýçta birim vektör
 		glm::vec3 rotation{}; // döndürme vektörü, baþlangýçta sýfýr vektör
 
-        // Matrix corrsponds to Translate * Ry * Rx * Rz * Scale
-       // Rotations correspond to Tait-bryan angles of Y(1), X(2), Z(3)
+		// Matris hesaplama fonksiyonlarý
+	   // Rotation sýrasýný YXZ olarak belirledik, bu sýrayla döndürme iþlemi yapýlacak
 		glm::mat4 mat4();
 
 		glm::mat3 normalMatrix();
@@ -37,7 +37,7 @@ namespace lve {
 		  using id_t = unsigned int;
 		  using Map = std::unordered_map<id_t, LveGameObject>;
 
-		  bool isActive = true; //Obje varsayýlan olarak aktif (görünür) doðar
+		  bool isActive = true; //Obje varsayýlan olarak aktiftir
 
 		  static LveGameObject createGameObject() {
 
@@ -61,10 +61,10 @@ namespace lve {
 		  TransformComponent transform{};
 		  
 
-		  // Optional pointer components
+		  
 		  std::shared_ptr<LveModel> model{};
 
-		  // Optional per-object texture set (used when model doesn't provide per-material textures)
+		  // Texture seti, materyal için gerekli olabilir
 		  VkDescriptorSet textureDescriptorSet{VK_NULL_HANDLE};
 		  std::unique_ptr<PointLightComponent> pointLight = nullptr;
 

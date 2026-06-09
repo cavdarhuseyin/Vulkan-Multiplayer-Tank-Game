@@ -96,7 +96,7 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
   for (auto &kv : frameInfo.gameObjects) {
     auto &obj = kv.second;
 
-    // Obje aktif deðilse veya modeli yoksa bu döngü adýmýný atla (render etme)
+    // Obje aktif deðilse veya modeli yoksa atla (render etme)
     if (!obj.isActive || obj.model == nullptr) continue;
 
     SimplePushConstantData push{};
@@ -113,8 +113,7 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
 
     obj.model->bind(frameInfo.commandBuffer);
 
-    // If model has submeshes/materials (OBJ+MTL), draw per material.
-    // Otherwise fall back to the GameObject texture set (useful for tank etc.).
+
     const auto &submeshes = obj.model->getSubmeshes();
     if (!submeshes.empty()) {
       for (const auto &sm : submeshes) {
@@ -153,4 +152,4 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
   }
 }
 
-} // namespace lve
+} 

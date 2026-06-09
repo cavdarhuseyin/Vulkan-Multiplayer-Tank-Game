@@ -16,7 +16,7 @@ namespace lve {
 		VkImageView imageView() const { return textureImageView_; }
 		VkSampler sampler() const { return textureSampler_; }
 
-		// Convenience for descriptor writes (combined image sampler)
+		
 		VkDescriptorImageInfo descriptorInfo(
 			VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) const {
 			VkDescriptorImageInfo info{};
@@ -42,4 +42,4 @@ namespace lve {
 		uint32_t height_{ 0 };
 	};
 
-} // namespace lve
+} 

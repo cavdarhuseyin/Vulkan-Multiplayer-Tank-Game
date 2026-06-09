@@ -159,7 +159,6 @@
     <ClCompile Include="lve_texture.cpp" />
     <ClCompile Include="lve_window.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="point_light_system.cpp" />
     <ClCompile Include="simple_render_system.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,14 +179,11 @@
     <ClInclude Include="lve_texture.hpp" />
     <ClInclude Include="lve_utils.hpp" />
     <ClInclude Include="lve_window.hpp" />
-    <ClInclude Include="point_light_system.hpp" />
     <ClInclude Include="shared\network_protocol.hpp" />
     <ClInclude Include="simple_render_system.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="compile.sh" />
-    <None Include="Shaders\point_light.frag" />
-    <None Include="Shaders\point_light.vert" />
     <None Include="Shaders\simple_shader.frag" />
     <None Include="Shaders\simple_shader.frag.spv" />
     <None Include="Shaders\simple_shader.vert" />

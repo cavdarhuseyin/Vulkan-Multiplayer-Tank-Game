@@ -38,17 +38,17 @@ public:
     const std::vector<uint32_t>& getIndices() const { return indices_cpu; }
     bool hasIndices() const { return hasIndexBuffer; }
 
-  // One draw call region in the shared index buffer
+	// Submesh struct'ý, modelin farklý parçalarýný temsil eder ve her parça için index aralýðý ve materyal bilgisi tutar
   struct Submesh {
     uint32_t firstIndex{0};
     uint32_t indexCount{0};
     int materialIndex{0};
   };
 
-  // Simple material (only diffuse/albedo texture for now)
+  // Material struct'ý, her materyal için diffuse texture bilgisi ve descriptor set'ini tutar
   struct Material {
-    std::string diffusePath;                 // resolved path on disk
-    std::shared_ptr<LveTexture> diffuseTex;  // loaded texture (can be null)
+	  std::string diffusePath;                 // texture dosya yolu (yükleme sýrasýnda kullanýlýr)
+	  std::shared_ptr<LveTexture> diffuseTex;  // Yüklenen texture nesnesi
     VkDescriptorSet descriptorSet{VK_NULL_HANDLE};
   };
 
@@ -69,7 +69,7 @@ public:
 
   static std::unique_ptr<LveModel> createModelFromFile(LveDevice &device, const std::string &filepath);
 
-  // Create descriptor sets for each material (set=1 binding=0 sampler2D)
+  // Materyal descriptor setlerini oluþturacak fonksiyon (texture set layout'ý parametre olarak alýr)
   void createMaterialDescriptorSets(LveDescriptorPool &pool, LveDescriptorSetLayout &textureSetLayout);
 
   const std::vector<Submesh> &getSubmeshes() const { return submeshes_; }
@@ -85,7 +85,7 @@ private:
   void createVertexBuffers(const std::vector<Vertex> &vertices);
   void createIndexBuffers(const std::vector<uint32_t> &indices);
 
-  // Model verilerini CPU'da tutacak deðiþkenlerimiz
+  // Model verilerini CPU'da tutacak deðiþkenler
   std::vector<Vertex> vertices_cpu;
   std::vector<uint32_t> indices_cpu;
 
@@ -105,4 +105,4 @@ private:
 
 };
 
-} // namespace lve
+} 

@@ -10,8 +10,8 @@ namespace lve {
 
 class SimpleRenderSystem {
 public:
-  // set=0: global (UBO etc.)
-  // set=1: per-material/object texture
+  // set=0: global (UBO vb.)
+  // set=1: her material/object texture
   SimpleRenderSystem(
       LveDevice &device,
       VkRenderPass renderPass,

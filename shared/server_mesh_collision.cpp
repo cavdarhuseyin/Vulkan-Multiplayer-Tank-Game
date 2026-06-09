@@ -182,5 +182,5 @@ bool ServerMeshCollision::raycast(
     return hit && closest <= maxDistance;
 }
 
-} // namespace net
-} // namespace lve
+} 
+} 

@@ -7,7 +7,7 @@ namespace lve {
 
     class LveCollision {
     public:
-        // Ray-Triangle Kesiþim Testi (DX12'deki mantýðýn GLM karþýlýðý)
+        // Ray-Triangle Kesiþim Testi (GLM tarafýndan)
         static float IntersectModel(
             const glm::vec3& rayOrigin,
             const glm::vec3& rayDir,
@@ -21,4 +21,4 @@ namespace lve {
             float& t);
     };
 
-} // namespace lve
+} 

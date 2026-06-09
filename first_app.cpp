@@ -14,10 +14,9 @@
 #include "lve_camera.hpp"
 #include "lve_collision.hpp"
 #include "simple_render_system.hpp"
-#include "point_light_system.hpp"
 #include "lve_texture.hpp"
 
-// Libraries
+// libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -31,11 +30,12 @@
 
 namespace lve {
 
+
     namespace {
         constexpr const char* SERVER_IP = "127.0.0.1";
         constexpr int SERVER_PORT = 7777;
     }
-
+    
     FirstApp::FirstApp() {
         globalPool = LveDescriptorPool::Builder(lveDevice)
             .setMaxSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -45,10 +45,11 @@ namespace lve {
 
         loadGameObjects();
     }
-
+   
     FirstApp::~FirstApp() {
         networkClient.disconnect();
     }
+
 
     net::ClientInputPacket FirstApp::buildLocalInput(std::uint32_t inputSequence) const {
         net::ClientInputPacket input{};
@@ -167,6 +168,7 @@ namespace lve {
         previousMissileActiveStates[playerId] = false;
     }
 
+
     void FirstApp::removeMissingPlayers(const net::WorldStatePacket& worldState) {
         std::unordered_set<std::uint32_t> alivePlayers;
 
@@ -283,8 +285,8 @@ namespace lve {
                 }
             }
         }
+         
 
-        // Local sight - multiplayer öncesindeki raycast mantığı
         auto localPlayerId = networkClient.getLocalPlayerId();
         auto localIt = playerVisuals.find(localPlayerId);
         bool localAlive = false;
@@ -374,6 +376,7 @@ namespace lve {
             gameObjects.at(sightId).transform.translation = { 0.f, -1000.f, 0.f };
         }
     }
+
 
     void FirstApp::run() {
         std::vector<std::unique_ptr<LveBuffer>> uboBuffers(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -476,11 +479,6 @@ namespace lve {
             textureSetLayout->getDescriptorSetLayout()
         };
 
-        PointLightSystem pointLightSystem{
-            lveDevice,
-            lveRenderer.getSwapChainRenderPass(),
-            globalSetLayout->getDescriptorSetLayout()
-        };
 
         LveCamera camera{};
         auto viewerObject = LveGameObject::createGameObject();
@@ -491,6 +489,7 @@ namespace lve {
         cameraController.lookSpeed = 1.5f;
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+        
 
         if (!networkClient.connect(SERVER_IP, SERVER_PORT)) {
             std::cerr << "Server'a baglanilamadi: " << SERVER_IP << ":" << SERVER_PORT << "\n";
@@ -535,6 +534,7 @@ namespace lve {
             if (!fpsMode) {
                 cameraController.moveInPlaneXZ(lveWindow.getGLFWwindow(), frameTime, viewerObject);
             }
+
 
             if (networkClient.isConnected()) {
                 auto input = buildLocalInput(++inputSequenceCounter);
@@ -610,14 +610,13 @@ namespace lve {
                 ubo.view = camera.getViewMatrix();
                 ubo.inverseView = camera.getInverseViewMatrix();
 
-                pointLightSystem.update(frameInfo, ubo);
 
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 lveRenderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(frameInfo);
-                pointLightSystem.render(frameInfo);
+                
                 lveRenderer.endSwapChainRenderPass(commandBuffer);
                 lveRenderer.endFrame();
             }
@@ -625,6 +624,7 @@ namespace lve {
 
         vkDeviceWaitIdle(lveDevice.device());
     }
+  
 
     void FirstApp::loadGameObjects() {
         tankBodyModel = LveModel::createModelFromFile(lveDevice, "models/TankBody.obj");
@@ -655,5 +655,6 @@ namespace lve {
         gameObjects.emplace(sightId, std::move(sight));
     }
 
-} // namespace lve
+
+} 
 

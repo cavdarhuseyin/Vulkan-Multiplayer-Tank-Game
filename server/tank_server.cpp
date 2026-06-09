@@ -620,8 +620,7 @@ void TankServer::removeClient(std::uint32_t playerId) {
 
         if (session->readThread.joinable()) {
             if (session->readThread.get_id() == std::this_thread::get_id()) {
-                // removeClient() can be called from this client's own read thread.
-                // Destroying a joinable std::thread calls std::terminate/abort().
+ 
                 session->readThread.detach();
             }
             else {
@@ -633,5 +632,5 @@ void TankServer::removeClient(std::uint32_t playerId) {
     }
 }
 
-} // namespace net
-} // namespace lve
+} 
+} 

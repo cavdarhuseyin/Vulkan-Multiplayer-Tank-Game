@@ -1,8 +1,6 @@
 #include "lve_renderer.hpp"
 
 
-
-
 #include <stdexcept>
 #include <array>
 #include <iostream> 
@@ -10,11 +8,9 @@
 namespace lve {
 
 
-
-
     LveRenderer::LveRenderer(LveWindow& window, LveDevice& device) : lveWindow{ window }, lveDevice{device} {
         recreateSwapChain();
-		createCommandBuffers(); //  
+		createCommandBuffers(); 
     }
 
     LveRenderer::~LveRenderer() {freeCommandBuffers();}
@@ -165,4 +161,4 @@ namespace lve {
 	}
 
 
-} // namespace lve
+} 

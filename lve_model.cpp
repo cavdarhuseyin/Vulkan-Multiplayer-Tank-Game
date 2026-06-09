@@ -24,7 +24,7 @@ namespace std {
             return seed;
         }
     };
-} // namespace std
+} 
 
 namespace lve {
 
@@ -34,15 +34,10 @@ namespace lve {
         return filepath.substr(0, slash);
     }
 
-    static std::string normalizeRelPath(std::string p) {
-        // wild_town.mtl uses "/Maps/xxx.jpg" style paths; treat them as relative.
-        while (!p.empty() && (p.front() == '/' || p.front() == '\\')) p.erase(p.begin());
-        return p;
-    }
 
     LveModel::LveModel(LveDevice& device, const Builder& builder) : lveDevice{ device } {
 
-        // GPU'ya göndermeden önce RAM kopyasýný saklýyoruz
+        // GPU'ya gondermeden once RAM kopyasini sakliyoruz
         vertices_cpu = builder.vertices;
         indices_cpu = builder.indices;
 
@@ -51,7 +46,7 @@ namespace lve {
         submeshes_ = builder.submeshes;
         materials_ = builder.materials;
 
-        // Load textures (diffuse only for now)
+        // texture'lari yukler 
         for (auto& mat : materials_) {
             if (mat.diffusePath.empty()) continue;
             try {
@@ -218,7 +213,7 @@ namespace lve {
         submeshes.clear();
         materials.clear();
 
-        // --- Materials prepare ---
+        // Materialleri hazirlar 
         if (tinyMats.empty()) {
             Material mat{};
             mat.diffusePath = "";
@@ -230,7 +225,7 @@ namespace lve {
                 const auto& m = tinyMats[i];
                 Material mat{};
                 if (!m.diffuse_texname.empty()) {
-                    const std::string rel = normalizeRelPath(m.diffuse_texname);
+                    const std::string rel = m.diffuse_texname;
                     mat.diffusePath = baseDir.empty() ? rel : (baseDir + "/" + rel);
                 }
                 materials[i] = mat;
@@ -239,7 +234,7 @@ namespace lve {
 
         std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-        // indices grouped per material
+        // her material icin indexleri tutar
         std::vector<std::vector<uint32_t>> perMatIndices(materials.size());
 
         for (const auto& shape : shapes) {
@@ -285,7 +280,7 @@ namespace lve {
                         };
                     }
 
-                    //  UV (wild_town için sadece V flip)
+                    
                     if (idx.texcoord_index >= 0 && !attrib.texcoords.empty()) {
                         float u = attrib.texcoords[2 * idx.texcoord_index + 0];
                         float vv = attrib.texcoords[2 * idx.texcoord_index + 1];
@@ -305,7 +300,7 @@ namespace lve {
             }
         }
 
-        // --- Build one index buffer + submeshes ---
+		// Submesh'leri ve index buffer hazirlar
         for (int mat = 0; mat < static_cast<int>(perMatIndices.size()); mat++) {
             auto& vec = perMatIndices[mat];
             if (vec.empty()) continue;
@@ -320,4 +315,4 @@ namespace lve {
         }
     }
 
-} // namespace lve
+} 

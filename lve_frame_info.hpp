@@ -12,13 +12,13 @@ namespace lve {
 #define MAX_LIGHTS 10
 
 	struct PointLight {
-		glm::vec4 position{}; // ignore w
-		glm::vec4 color{};    // w is intensity
+		glm::vec4 position{}; 
+		glm::vec4 color{};    // w yoðunluk (intensity)
 	};
 
 	struct DirectionalLight {
-		glm::vec4 direction{}; // xyz = direction (normalized), w unused
-		glm::vec4 color{};     // rgb = color, w = intensity
+		glm::vec4 direction{}; // xyz = doðrultu (normalize edilmiþ)
+		glm::vec4 color{};     // rgb = renk, w = yoðunluk (intensity)
 	};
 
 	struct GlobalUbo {
@@ -26,11 +26,11 @@ namespace lve {
 		glm::mat4 view{ 1.f };
 		glm::mat4 inverseView{ 1.f };
 
-		glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, 0.25f }; // w = intensity (ARTTIRDIK)
+		glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, 0.25f }; 
 
 		PointLight pointLights[MAX_LIGHTS];
 
-		// std140 alignment: int + padding
+		// alingnment için padding (numLights eðer pointlight varsa)
 		int numLights{ 0 };
 		glm::vec3 _pad0{ 0.f };
 

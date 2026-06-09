@@ -14,8 +14,6 @@ namespace lve {
 
     namespace {
 
-        // Tank/turret için sahnede kullanýlacak TEK doðru ileri yön
-        // Artýk muzzle, missile ve sight hep bunu kullanacak.
         glm::vec3 getTurretForward(float yaw) {
             glm::vec3 forward{ -std::sin(yaw), 0.f, -std::cos(yaw) };
             return glm::normalize(forward);
@@ -27,7 +25,7 @@ namespace lve {
             return glm::normalize(forward);
         }
 
-    } // unnamed namespace
+    } 
 
     void KeyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, LveGameObject& gameObject) {
         glm::vec3 rotate{ 0.f };
@@ -302,8 +300,7 @@ namespace lve {
             sight.transform.translation = muzzlePos + (forward * 200.f);
         }
 
-        // Mesh local forward ekseni ters export edilmiþ olabilir.
-        // World forward TEK ve doðru; burada sadece görsel mesh orientation düzeltiliyor.
+       
         sight.transform.rotation = tankTurret.transform.rotation;
         sight.transform.rotation.y += glm::pi<float>();
 

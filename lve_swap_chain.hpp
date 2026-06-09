@@ -2,10 +2,10 @@
 
 #include "lve_device.hpp"
 
-// vulkan headers
+// vulkan headerý
 #include <vulkan/vulkan.h>
 
-// std lib headers
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,7 +54,7 @@ class LveSwapChain {
   void createFramebuffers();
   void createSyncObjects();
 
-  // Helper functions
+  // Yardýmcý fonksiyonlar
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<VkSurfaceFormatKHR> &availableFormats);
   VkPresentModeKHR chooseSwapPresentMode(
@@ -87,4 +87,4 @@ class LveSwapChain {
   size_t currentFrame = 0;
 };
 
-}  // namespace lve
+}  

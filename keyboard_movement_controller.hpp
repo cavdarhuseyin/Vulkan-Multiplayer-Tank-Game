@@ -13,7 +13,7 @@ private:
 
 public:
   struct KeyMappings {
-    // Camera / generic movement keys (default)
+    // Camera / hareketleri
     int moveLeft = GLFW_KEY_A;
     int moveRight = GLFW_KEY_D;
     int moveForward = GLFW_KEY_W;
@@ -25,11 +25,11 @@ public:
     int lookUp = GLFW_KEY_UP;
     int lookDown = GLFW_KEY_DOWN;
 
-    // Tank turret keys
+    // Tank turret tuþlarý
     int turretLeft = GLFW_KEY_I;
     int turretRight = GLFW_KEY_O;
 
-    // Fire / reload
+    // Ateþ etme / reload
     int fire = GLFW_KEY_SPACE;
     int reload = GLFW_KEY_R;
   };
@@ -42,14 +42,14 @@ public:
   );
 
 
-  // Standard camera movement
+  // Standart camera hareketi
   void moveInPlaneXZ(GLFWwindow *window, float dt, LveGameObject &gameObject);
 
   // Tank + turret + missile control
   void moveTank(GLFWwindow *window, float dt, LveGameObject &tankBody, LveGameObject &tankTurret,
                 LveGameObject &missile, LveGameObject& sight,  LveGameObject::Map& gameObjects);
 
-  // Tank key bindings setup
+  // Tank tuþ atamalarý
   void setupForTank();
 
   KeyMappings keys{};
@@ -64,9 +64,9 @@ private:
   bool isMissileFired{false};
   glm::vec3 missileVelocity{0.f};
 
-  // edge-trigger (so fire/reload happens once per key press)
+  // edge detection için önceki tuþ durumlarý
   bool fireWasDown{false};
   bool reloadWasDown{false};
 };
 
-} // namespace lve
+} 

@@ -1,4 +1,4 @@
-// lve_texture.cpp
+
 
 #include "lve_texture.hpp"
 #include "lve_buffer.hpp"
@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <string>
-#include <cctype>   // tolower
+#include <cctype>   
 
 namespace lve {
 
@@ -52,7 +52,7 @@ void LveTexture::createTextureImage(const std::string& filepath) {
     height_ = static_cast<uint32_t>(texHeight);
     VkDeviceSize imageSize = static_cast<VkDeviceSize>(width_) * height_ * 4;
 
-    // Staging buffer (CPU->GPU)
+    // Staging buffer (CPU'dan GPU'ya)
     LveBuffer stagingBuffer{
         lveDevice_,
         static_cast<uint32_t>(imageSize), // instanceSize
@@ -65,7 +65,7 @@ void LveTexture::createTextureImage(const std::string& filepath) {
     stagingBuffer.writeToBuffer(pixels);
     stbi_image_free(pixels);
 
-    // GPU image oluþtur
+    // GPU image oluþturur
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -88,16 +88,16 @@ void LveTexture::createTextureImage(const std::string& filepath) {
         textureImageMemory_
     );
 
-    // Layout: UNDEFINED -> TRANSFER_DST
+    
     lveDevice_.transitionImageLayout(
         textureImage_,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        1, // mipLevels
-        1  // layerCount
+        1,
+        1  
     );
 
-    // Buffer -> Image copy
+    
     lveDevice_.copyBufferToImage(
         stagingBuffer.getBuffer(),
         textureImage_,
@@ -106,7 +106,7 @@ void LveTexture::createTextureImage(const std::string& filepath) {
         1
     );
 
-    // Layout: TRANSFER_DST -> SHADER_READ
+    
     lveDevice_.transitionImageLayout(
         textureImage_,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -135,7 +135,7 @@ void LveTexture::createTextureSampler() {
     samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-    // anisotropy
+    
     samplerInfo.anisotropyEnable = VK_TRUE;
     samplerInfo.maxAnisotropy = lveDevice_.properties.limits.maxSamplerAnisotropy;
 
@@ -155,4 +155,4 @@ void LveTexture::createTextureSampler() {
     }
 }
 
-} // namespace lve
+} 

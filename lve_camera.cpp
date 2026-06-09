@@ -1,12 +1,5 @@
 #include "lve_camera.hpp"
 
-
-//libs
-
-//#include <tiny_obj_loader.h>
-
-
-//std
 #include <cassert>
 #include <limits>
 
@@ -72,7 +65,7 @@ namespace lve
 	}
 
 	void LveCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up) {
-		setViewDirection(position, target - position, up); // hedef pozisyonu - kamera pozisyonu = bakýþ yönü
+		setViewDirection(position, target - position, up); 
 	}
 
 	void LveCamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {

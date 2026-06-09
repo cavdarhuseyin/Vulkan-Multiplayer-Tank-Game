@@ -47,5 +47,5 @@ private:
     std::vector<Triangle> triangles_{};
 };
 
-} // namespace net
-} // namespace lve
+} 
+} 

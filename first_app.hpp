@@ -55,7 +55,7 @@ namespace lve {
         std::unique_ptr<LveDescriptorPool> globalPool{};
         LveGameObject::Map gameObjects;
 
-        // Object IDs (environment + local player fallback)
+        // Object IDleri 
         LveGameObject::id_t tankId{};
         LveGameObject::id_t turretId{};
         LveGameObject::id_t missileId{};
