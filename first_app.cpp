@@ -6,6 +6,8 @@
 #include <limits>
 
 #include <windows.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -14,7 +16,6 @@
 #include "lve_camera.hpp"
 #include "lve_collision.hpp"
 #include "simple_render_system.hpp"
-#include "point_light_system.hpp"
 #include "lve_texture.hpp"
 
 // Libraries
@@ -31,11 +32,49 @@
 
 namespace lve {
 
+
     namespace {
         constexpr const char* SERVER_IP = "127.0.0.1";
         constexpr int SERVER_PORT = 7777;
-    }
+        FirstApp* gActiveChatApp = nullptr;
 
+        HWND gChatHistory = nullptr;
+        HWND gChatInput = nullptr;
+        HFONT gChatFont = nullptr;
+        HBRUSH gChatBackgroundBrush = nullptr;
+        WNDPROC gOldWindowProc = nullptr;
+        std::string gLastChatHistoryText{};
+        std::string gLastChatInputText{};
+        RECT gLastClientRect{};
+
+        constexpr COLORREF CHAT_BG_COLOR = RGB(14, 32, 18);
+        constexpr COLORREF CHAT_TEXT_COLOR = RGB(145, 255, 145);
+
+        LRESULT CALLBACK chatOverlayWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+            if (msg == WM_CTLCOLORSTATIC &&
+                (reinterpret_cast<HWND>(lParam) == gChatHistory ||
+                 reinterpret_cast<HWND>(lParam) == gChatInput)) {
+
+                HDC hdc = reinterpret_cast<HDC>(wParam);
+                SetTextColor(hdc, CHAT_TEXT_COLOR);
+                SetBkColor(hdc, CHAT_BG_COLOR);
+                return reinterpret_cast<LRESULT>(gChatBackgroundBrush);
+            }
+
+            if (gOldWindowProc != nullptr) {
+                return CallWindowProc(gOldWindowProc, hwnd, msg, wParam, lParam);
+            }
+
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
+
+        void charInputCallback(GLFWwindow*, unsigned int codepoint) {
+            if (gActiveChatApp) {
+                gActiveChatApp->onCharInput(codepoint);
+            }
+        }
+    }
+    
     FirstApp::FirstApp() {
         globalPool = LveDescriptorPool::Builder(lveDevice)
             .setMaxSets(LveSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -45,14 +84,19 @@ namespace lve {
 
         loadGameObjects();
     }
-
+   
     FirstApp::~FirstApp() {
         networkClient.disconnect();
     }
 
+
     net::ClientInputPacket FirstApp::buildLocalInput(std::uint32_t inputSequence) const {
         net::ClientInputPacket input{};
         input.inputSequence = inputSequence;
+
+        if (chatMode) {
+            return input;
+        }
 
         GLFWwindow* window = lveWindow.getGLFWwindow();
 
@@ -118,6 +162,234 @@ namespace lve {
     }
 
 
+    void FirstApp::onCharInput(unsigned int codepoint) {
+        if (!chatMode) return;
+        if (chatDraft.size() >= net::kMaxChatLength - 1) return;
+
+        // Basic ASCII input. Turkish/non-ASCII characters can be added later with UTF-8 conversion.
+        if (codepoint >= 32 && codepoint <= 126) {
+            chatDraft.push_back(static_cast<char>(codepoint));
+        }
+    }
+
+    void FirstApp::handleChatInput() {
+        GLFWwindow* window = lveWindow.getGLFWwindow();
+
+        const bool toggleNow = glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS;
+        if (toggleNow && !chatTogglePressed && !chatMode) {
+            chatMode = true;
+            chatDraft.clear();
+            std::cout << "\n[Chat] Yazma modu acildi. Mesaj yaz, Enter ile gonder, Esc ile iptal et.\n";
+        }
+        chatTogglePressed = toggleNow;
+
+        if (!chatMode) return;
+
+        const bool backspaceNow = glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS;
+        if (backspaceNow && !chatBackspacePressed && !chatDraft.empty()) {
+            chatDraft.pop_back();
+        }
+        chatBackspacePressed = backspaceNow;
+
+        const bool enterNow =
+            glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
+            glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS;
+
+        if (enterNow && !chatEnterPressed) {
+            if (!chatDraft.empty()) {
+                networkClient.sendChatMessage(chatDraft);
+            }
+            chatDraft.clear();
+            chatMode = false;
+        }
+        chatEnterPressed = enterNow;
+
+        const bool escapeNow = glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+        if (escapeNow && !chatEscapePressed) {
+            chatDraft.clear();
+            chatMode = false;
+        }
+        chatEscapePressed = escapeNow;
+    }
+
+    void FirstApp::createChatOverlay() {
+        HWND parentWindow = glfwGetWin32Window(lveWindow.getGLFWwindow());
+        if (parentWindow == nullptr || gChatHistory != nullptr) {
+            return;
+        }
+
+        SetWindowTextA(parentWindow, "Vulkan Multiplayer Tank");
+
+        LONG_PTR parentStyle = GetWindowLongPtr(parentWindow, GWL_STYLE);
+        SetWindowLongPtr(parentWindow, GWL_STYLE, parentStyle | WS_CLIPCHILDREN);
+
+        gChatBackgroundBrush = CreateSolidBrush(CHAT_BG_COLOR);
+
+        gOldWindowProc = reinterpret_cast<WNDPROC>(
+            SetWindowLongPtr(parentWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(chatOverlayWindowProc))
+        );
+
+        gChatFont = CreateFontA(
+            15,
+            0,
+            0,
+            0,
+            FW_NORMAL,
+            FALSE,
+            FALSE,
+            FALSE,
+            DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY,
+            FIXED_PITCH | FF_MODERN,
+            "Consolas"
+        );
+
+        gChatHistory = CreateWindowExA(
+            0,
+            "STATIC",
+            "",
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            16,
+            360,
+            410,
+            96,
+            parentWindow,
+            nullptr,
+            GetModuleHandle(nullptr),
+            nullptr
+        );
+
+        gChatInput = CreateWindowExA(
+            0,
+            "STATIC",
+            "[T] Sohbeti ac",
+            WS_CHILD | WS_VISIBLE | SS_LEFT,
+            16,
+            460,
+            410,
+            22,
+            parentWindow,
+            nullptr,
+            GetModuleHandle(nullptr),
+            nullptr
+        );
+
+        SendMessage(gChatHistory, WM_SETFONT, reinterpret_cast<WPARAM>(gChatFont), TRUE);
+        SendMessage(gChatInput, WM_SETFONT, reinterpret_cast<WPARAM>(gChatFont), TRUE);
+
+        gLastChatHistoryText.clear();
+        gLastChatInputText.clear();
+        SetRectEmpty(&gLastClientRect);
+
+        updateChatOverlay();
+    }
+
+    void FirstApp::updateChatOverlay() {
+        if (gChatHistory == nullptr || gChatInput == nullptr) {
+            return;
+        }
+
+        HWND parentWindow = glfwGetWin32Window(lveWindow.getGLFWwindow());
+        if (parentWindow == nullptr) {
+            return;
+        }
+
+        RECT clientRect{};
+        GetClientRect(parentWindow, &clientRect);
+
+        if (clientRect.right != gLastClientRect.right || clientRect.bottom != gLastClientRect.bottom) {
+            const int margin = 16;          // Panelin ekrana olan uzaklığı
+            const int panelWidth = 620;     // Chat panelinin genişliği
+            const int inputHeight = 28;     // Alt yazı satırının yüksekliği
+            const int historyHeight = 200;  // Mesaj geçmişi kutusunun yüksekliği
+            const int gap = 6;              // Mesaj kutusu ile input arası boşluk
+            const int totalHeight = historyHeight + gap + inputHeight;
+
+            const int x = margin;
+            const int y = (clientRect.bottom - clientRect.top) - totalHeight - margin;
+
+            MoveWindow(gChatHistory, x, y, panelWidth, historyHeight, TRUE);
+            MoveWindow(gChatInput, x, y + historyHeight + gap, panelWidth, inputHeight, TRUE);
+
+            gLastClientRect = clientRect;
+        }
+
+        auto messages = networkClient.getChatMessages();
+        std::string historyText;
+
+        if (messages.empty()) {
+            historyText = "[Sohbet paneli]\r\n[T] tusu ile yazma modunu ac.";
+        }
+        else {
+            std::size_t first = 0;
+            if (messages.size() > 5) {
+                first = messages.size() - 5;
+            }
+
+            for (std::size_t i = first; i < messages.size(); ++i) {
+                historyText += "[" + messages[i].senderNick + "]: " + messages[i].message;
+                if (i + 1 < messages.size()) {
+                    historyText += "\r\n";
+                }
+            }
+        }
+
+        if (historyText != gLastChatHistoryText) {
+            SetWindowTextA(gChatHistory, historyText.c_str());
+            gLastChatHistoryText = historyText;
+            InvalidateRect(gChatHistory, nullptr, FALSE);
+        }
+
+        std::string inputText;
+        if (chatMode) {
+            inputText = "[Yaz] " + chatDraft;
+        }
+        else {
+            inputText = "[T] Sohbeti ac";
+        }
+
+        if (inputText != gLastChatInputText) {
+            SetWindowTextA(gChatInput, inputText.c_str());
+            gLastChatInputText = inputText;
+            InvalidateRect(gChatInput, nullptr, FALSE);
+        }
+    }
+
+    void FirstApp::destroyChatOverlay() {
+        HWND parentWindow = glfwGetWin32Window(lveWindow.getGLFWwindow());
+
+        if (parentWindow != nullptr && gOldWindowProc != nullptr) {
+            SetWindowLongPtr(parentWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(gOldWindowProc));
+            gOldWindowProc = nullptr;
+        }
+
+        if (gChatInput != nullptr) {
+            DestroyWindow(gChatInput);
+            gChatInput = nullptr;
+        }
+
+        if (gChatHistory != nullptr) {
+            DestroyWindow(gChatHistory);
+            gChatHistory = nullptr;
+        }
+
+        if (gChatFont != nullptr) {
+            DeleteObject(gChatFont);
+            gChatFont = nullptr;
+        }
+
+        if (gChatBackgroundBrush != nullptr) {
+            DeleteObject(gChatBackgroundBrush);
+            gChatBackgroundBrush = nullptr;
+        }
+
+        gLastChatHistoryText.clear();
+        gLastChatInputText.clear();
+        SetRectEmpty(&gLastClientRect);
+    }
+
     void FirstApp::ensurePlayerVisuals(
         std::uint32_t playerId,
         VkDescriptorSet tankTextureSet,
@@ -166,6 +438,7 @@ namespace lve {
 
         previousMissileActiveStates[playerId] = false;
     }
+
 
     void FirstApp::removeMissingPlayers(const net::WorldStatePacket& worldState) {
         std::unordered_set<std::uint32_t> alivePlayers;
@@ -283,8 +556,8 @@ namespace lve {
                 }
             }
         }
+         
 
-        // Local sight - multiplayer öncesindeki raycast mantığı
         auto localPlayerId = networkClient.getLocalPlayerId();
         auto localIt = playerVisuals.find(localPlayerId);
         bool localAlive = false;
@@ -374,6 +647,7 @@ namespace lve {
             gameObjects.at(sightId).transform.translation = { 0.f, -1000.f, 0.f };
         }
     }
+
 
     void FirstApp::run() {
         std::vector<std::unique_ptr<LveBuffer>> uboBuffers(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -476,11 +750,7 @@ namespace lve {
             textureSetLayout->getDescriptorSetLayout()
         };
 
-        PointLightSystem pointLightSystem{
-            lveDevice,
-            lveRenderer.getSwapChainRenderPass(),
-            globalSetLayout->getDescriptorSetLayout()
-        };
+
 
         LveCamera camera{};
         auto viewerObject = LveGameObject::createGameObject();
@@ -491,17 +761,32 @@ namespace lve {
         cameraController.lookSpeed = 1.5f;
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+        
 
-        if (!networkClient.connect(SERVER_IP, SERVER_PORT)) {
+        std::string nickname;
+        std::cout << "Nick giriniz: ";
+        std::getline(std::cin, nickname);
+        if (nickname.empty()) {
+            nickname = "Player";
+        }
+
+        gActiveChatApp = this;
+        glfwSetCharCallback(lveWindow.getGLFWwindow(), charInputCallback);
+        createChatOverlay();
+
+        if (!networkClient.connect(SERVER_IP, SERVER_PORT, nickname)) {
             std::cerr << "Server'a baglanilamadi: " << SERVER_IP << ":" << SERVER_PORT << "\n";
         }
         else {
             std::cout << "Server baglandi. Local playerId = "
                 << networkClient.getLocalPlayerId() << "\n";
+            std::cout << "Chat kullanimi: T tusu ile yazma modunu ac, Enter ile gonder.\n";
         }
 
         while (!lveWindow.shouldClose()) {
             glfwPollEvents();
+            handleChatInput();
+            updateChatOverlay();
 
             auto newTime = std::chrono::high_resolution_clock::now();
             float frameTime =
@@ -532,7 +817,7 @@ namespace lve {
                 fpsTogglePressed = false;
             }
 
-            if (!fpsMode) {
+            if (!fpsMode && !chatMode) {
                 cameraController.moveInPlaneXZ(lveWindow.getGLFWwindow(), frameTime, viewerObject);
             }
 
@@ -610,21 +895,24 @@ namespace lve {
                 ubo.view = camera.getViewMatrix();
                 ubo.inverseView = camera.getInverseViewMatrix();
 
-                pointLightSystem.update(frameInfo, ubo);
+               
 
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 lveRenderer.beginSwapChainRenderPass(commandBuffer);
                 simpleRenderSystem.renderGameObjects(frameInfo);
-                pointLightSystem.render(frameInfo);
+                
                 lveRenderer.endSwapChainRenderPass(commandBuffer);
                 lveRenderer.endFrame();
             }
         }
 
+        gActiveChatApp = nullptr;
+        destroyChatOverlay();
         vkDeviceWaitIdle(lveDevice.device());
     }
+  
 
     void FirstApp::loadGameObjects() {
         tankBodyModel = LveModel::createModelFromFile(lveDevice, "models/TankBody.obj");
@@ -654,6 +942,7 @@ namespace lve {
         sightId = sight.getId();
         gameObjects.emplace(sightId, std::move(sight));
     }
+
 
 } // namespace lve
 

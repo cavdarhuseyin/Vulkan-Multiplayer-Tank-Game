@@ -9,6 +9,8 @@ namespace lve {
         constexpr std::uint32_t kProtocolMagic = 0x54414E4B; // "TANK"
         constexpr std::uint32_t kProtocolVersion = 1;
         constexpr std::size_t kMaxPlayers = 8;
+        constexpr std::size_t kMaxNickLength = 24;
+        constexpr std::size_t kMaxChatLength = 128;
 
 #pragma pack(push, 1)
 
@@ -16,18 +18,33 @@ namespace lve {
             ClientHello = 1,
             ServerWelcome = 2,
             ClientInput = 3,
-            WorldState = 4
+            WorldState = 4,
+            ClientChat = 5,
+            ServerChat = 6
         };
 
         struct ClientHelloPacket {
             std::uint32_t type{ static_cast<std::uint32_t>(PacketType::ClientHello) };
             std::uint32_t magic{ kProtocolMagic };
             std::uint32_t version{ kProtocolVersion };
+            char nickname[kMaxNickLength]{};
         };
 
         struct ServerWelcomePacket {
             std::uint32_t type{ static_cast<std::uint32_t>(PacketType::ServerWelcome) };
             std::uint32_t playerId{ 0 };
+        };
+
+        struct ClientChatPacket {
+            std::uint32_t type{ static_cast<std::uint32_t>(PacketType::ClientChat) };
+            char message[kMaxChatLength]{};
+        };
+
+        struct ServerChatPacket {
+            std::uint32_t type{ static_cast<std::uint32_t>(PacketType::ServerChat) };
+            std::uint32_t senderPlayerId{ 0 };
+            char senderNick[kMaxNickLength]{};
+            char message[kMaxChatLength]{};
         };
 
         struct ClientInputPacket {

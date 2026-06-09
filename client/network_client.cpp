@@ -1,8 +1,28 @@
 #include "network_client.hpp"
 
 #include <iostream>
+#include <cstring>
 
 namespace lve::net {
+
+    namespace {
+        std::string boundedString(const char* text, std::size_t maxLength) {
+            std::size_t length = 0;
+            while (length < maxLength && text[length] != '\0') {
+                ++length;
+            }
+            return std::string(text, length);
+        }
+
+        template <std::size_t N>
+        void copyToFixedBuffer(char (&dest)[N], const std::string& src) {
+            std::memset(dest, 0, N);
+            const std::size_t count = (src.size() < N - 1) ? src.size() : N - 1;
+            if (count > 0) {
+                std::memcpy(dest, src.data(), count);
+            }
+        }
+    }
 
     NetworkClient::NetworkClient() {
         WSADATA wsaData{};
@@ -38,7 +58,7 @@ namespace lve::net {
         return true;
     }
 
-    bool NetworkClient::connect(const std::string& host, int port) {
+    bool NetworkClient::connect(const std::string& host, int port, const std::string& nickname) {
         disconnect();
 
         sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -63,6 +83,8 @@ namespace lve::net {
         }
 
         ClientHelloPacket hello{};
+        copyToFixedBuffer(hello.nickname, nickname);
+
         if (!sendAll(reinterpret_cast<const char*>(&hello), sizeof(hello))) {
             disconnect();
             return false;
@@ -110,6 +132,17 @@ namespace lve::net {
         }
     }
 
+    void NetworkClient::sendChatMessage(const std::string& message) {
+        if (!connected || sock == INVALID_SOCKET || message.empty()) return;
+
+        ClientChatPacket packet{};
+        copyToFixedBuffer(packet.message, message);
+
+        if (!sendAll(reinterpret_cast<const char*>(&packet), sizeof(packet))) {
+            connected = false;
+        }
+    }
+
     bool NetworkClient::tryGetLatestWorldState(WorldStatePacket& outState) {
         std::lock_guard<std::mutex> lock(stateMutex);
         if (!hasState) return false;
@@ -117,22 +150,70 @@ namespace lve::net {
         return true;
     }
 
+    std::vector<NetworkClient::ChatMessage> NetworkClient::getChatMessages() {
+        std::lock_guard<std::mutex> lock(chatMutex);
+        return chatMessages;
+    }
+
+    void NetworkClient::addChatMessage(const ServerChatPacket& packet) {
+        ChatMessage message{};
+        message.senderPlayerId = packet.senderPlayerId;
+        message.senderNick = boundedString(packet.senderNick, kMaxNickLength);
+        message.message = boundedString(packet.message, kMaxChatLength);
+
+        {
+            std::lock_guard<std::mutex> lock(chatMutex);
+            chatMessages.push_back(message);
+            if (chatMessages.size() > 8) {
+                chatMessages.erase(chatMessages.begin());
+            }
+        }
+
+        std::cout << "\n[" << message.senderNick << "]: " << message.message << "\n";
+    }
+
     void NetworkClient::receiveLoop() {
         while (!stop && connected) {
-            WorldStatePacket packet{};
-            if (!recvAll(reinterpret_cast<char*>(&packet), sizeof(packet))) {
+            std::uint32_t packetType = 0;
+            if (!recvAll(reinterpret_cast<char*>(&packetType), sizeof(packetType))) {
                 connected = false;
                 break;
             }
 
-            if (packet.type != static_cast<std::uint32_t>(PacketType::WorldState)) {
+            if (packetType == static_cast<std::uint32_t>(PacketType::WorldState)) {
+                WorldStatePacket packet{};
+                packet.type = packetType;
+
+                char* rest = reinterpret_cast<char*>(&packet) + sizeof(packetType);
+                int restSize = static_cast<int>(sizeof(WorldStatePacket) - sizeof(packetType));
+
+                if (!recvAll(rest, restSize)) {
+                    connected = false;
+                    break;
+                }
+
+                std::lock_guard<std::mutex> lock(stateMutex);
+                latestState = packet;
+                hasState = true;
+            }
+            else if (packetType == static_cast<std::uint32_t>(PacketType::ServerChat)) {
+                ServerChatPacket packet{};
+                packet.type = packetType;
+
+                char* rest = reinterpret_cast<char*>(&packet) + sizeof(packetType);
+                int restSize = static_cast<int>(sizeof(ServerChatPacket) - sizeof(packetType));
+
+                if (!recvAll(rest, restSize)) {
+                    connected = false;
+                    break;
+                }
+
+                addChatMessage(packet);
+            }
+            else {
                 connected = false;
                 break;
             }
-
-            std::lock_guard<std::mutex> lock(stateMutex);
-            latestState = packet;
-            hasState = true;
         }
     }
 

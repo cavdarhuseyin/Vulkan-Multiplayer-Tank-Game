@@ -10,6 +10,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 namespace lve {
 
@@ -25,6 +26,7 @@ namespace lve {
         FirstApp& operator=(const FirstApp&) = delete;
 
         void run();
+        void onCharInput(unsigned int codepoint);
 
     private:
         struct PlayerVisualSet {
@@ -47,6 +49,10 @@ namespace lve {
             VkDescriptorSet missileTextureSet);
 
         net::ClientInputPacket buildLocalInput(std::uint32_t inputSequence) const;
+        void handleChatInput();
+        void createChatOverlay();
+        void updateChatOverlay();
+        void destroyChatOverlay();
 
         LveWindow lveWindow{ WIDTH, HEIGHT, "Hello Vulkan!" };
         LveDevice lveDevice{ lveWindow };
@@ -82,6 +88,14 @@ namespace lve {
 
         // Network state
         std::uint32_t inputSequenceCounter{ 0 };
+
+        // Basic chat state
+        bool chatMode{ false };
+        bool chatTogglePressed{ false };
+        bool chatEnterPressed{ false };
+        bool chatBackspacePressed{ false };
+        bool chatEscapePressed{ false };
+        std::string chatDraft{};
     };
 
 } // namespace lve

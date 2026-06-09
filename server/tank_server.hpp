@@ -13,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -35,6 +36,7 @@ public:
 private:
     struct PlayerRuntimeState {
         std::uint32_t playerId{0};
+        std::string nickname{"Player"};
 
         float spawnPosX{0.f};
         float spawnPosY{1.f};
@@ -79,6 +81,7 @@ private:
 
     void updateSimulation(float dt);
     void broadcastWorldState();
+    void broadcastChatMessage(std::uint32_t senderPlayerId, const char* message);
     WorldStatePacket buildWorldStatePacket() const;
     void removeClient(std::uint32_t playerId);
 
